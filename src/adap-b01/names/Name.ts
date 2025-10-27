@@ -28,13 +28,32 @@ export class Name {
         this.components = [...other];
     }
 
+    private maskComponent(component: string): string {
+        // Escape the escape character 
+        let escaped = component.replaceAll(ESCAPE_CHARACTER, ESCAPE_CHARACTER + ESCAPE_CHARACTER);
+        // Escape the current delimiter
+        escaped = escaped.replaceAll(this.delimiter, ESCAPE_CHARACTER + this.delimiter);
+        return escaped;
+    }
+
+    private unmaskComponent(component: string, delimiter: string): string {
+        // Unescape the delimiter
+        let unmasked = component.replaceAll(ESCAPE_CHARACTER + delimiter, delimiter);
+        // Unescape the escape character
+        unmasked = unmasked.replaceAll(ESCAPE_CHARACTER + ESCAPE_CHARACTER, ESCAPE_CHARACTER);
+        return unmasked;
+    }
+
     /**
      * Returns a human-readable representation of the Name instance using user-set special characters
      * Special characters are not escaped (creating a human-readable string)
      * Users can vary the delimiter character to be used
      */
     public asString(delimiter: string = this.delimiter): string {
-        return this.components.join(delimiter);
+        // must remove the masking
+        const unmaskedComponents = this.components.map(c => this.unmaskComponent(c, this.delimiter));
+
+        return unmaskedComponents.join(delimiter);
     }
 
     /** 
@@ -43,7 +62,10 @@ export class Name {
      * The special characters in the data string are the default characters
      */
     public asDataString(): string {
-        return this.components.join(DEFAULT_DELIMITER);
+        // must remove the masking
+        const unmaskedComponents = this.components.map(c => this.unmaskComponent(c, this.delimiter));
+
+        return unmaskedComponents.join(DEFAULT_DELIMITER);
     }
 
     /** Returns properly masked component string */
