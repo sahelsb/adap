@@ -1,5 +1,8 @@
+// Link.ts (Homework B04: Design by Contract)
+
 import { Node } from "./Node";
 import { Directory } from "./Directory";
+import { IllegalArgumentException } from "../common/IllegalArgumentException";
 
 export class Link extends Node {
 
@@ -8,7 +11,7 @@ export class Link extends Node {
     constructor(bn: string, pn: Directory, tn?: Node) {
         super(bn, pn);
 
-        if (tn != undefined) {
+        if (tn !== undefined) {
             this.targetNode = tn;
         }
     }
@@ -18,6 +21,11 @@ export class Link extends Node {
     }
 
     public setTargetNode(target: Node): void {
+       
+        IllegalArgumentException.assert(
+            target !== undefined && target !== null,
+            "Precondition not met: Target node must not be null"
+        );
         this.targetNode = target;
     }
 
@@ -32,7 +40,11 @@ export class Link extends Node {
     }
 
     protected ensureTargetNode(target: Node | null): Node {
-        const result: Node = this.targetNode as Node;
-        return result;
+       
+        IllegalArgumentException.assert(
+            target !== undefined && target !== null,
+            "Precondition not met: Target node must not be null."
+        );
+        return target as Node;
     }
 }

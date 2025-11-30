@@ -1,3 +1,4 @@
+
 import { IllegalArgumentException } from "../common/IllegalArgumentException";
 import { InvalidStateException } from "../common/InvalidStateException";
 import { MethodFailedException } from "../common/MethodFailedException";
@@ -6,122 +7,163 @@ import { Coordinate } from "./Coordinate";
 
 export abstract class AbstractCoordinate implements Coordinate {
 
+    protected assertClassInvariant(): void {
+        const r = this.doGetR();
+        const phi = this.doGetPhi();
+        InvalidStateException.assert(
+            this.isValidR(r) && this.isValidPhi(phi), 
+            `Class invariant not met: R=${r} or Phi=${phi} is invalid.`
+        );
+    }
+    
+    protected isValidR(r: number): boolean {
+        return r >= 0;
+    }
+
+    protected isValidPhi(phi: number): boolean {
+        return (phi >= 0) && (phi < 2 * Math.PI);
+    }
+
+
     public abstract clone(): Coordinate;
+    public abstract reset(): void;
 
-    public toString(): string {
-        return this.asDataString();
-    }
+    protected abstract doGetX(): number;
+    protected abstract doSetX(x: number): void;
+    protected abstract doGetY(): number;
+    protected abstract doSetY(y: number): void;
+    protected abstract doGetR(): number;
+    protected abstract doSetR(r: number): void;
+    protected abstract doGetPhi(): number;
+    protected abstract doSetPhi(phi: number): void;
 
-    public asDataString(): string {
-        return this.doGetX() + "#" + this.doGetY();
-    }
 
-    public isEqual(other: Coordinate): boolean {
-        return (this.doGetX() == other.getX()) && (this.doGetY() == other.getY());
+    public isEqual(other: Object): boolean {
+        if (!(other instanceof AbstractCoordinate)) {
+            return false;
+        }
+        const otherCoord = other as Coordinate;
+        return this.doGetX() === otherCoord.getX() && this.doGetY() === otherCoord.getY();
     }
 
     public getHashCode(): number {
-        let hashCode: number = 0;
-        const s: string = this.asDataString();
-        for (let i: number = 0; i < s.length; i++) {
-            let c: number = s.charCodeAt(i);
-            hashCode = (hashCode << 5) - hashCode + c;
-            hashCode |= 0;
-        }
-        return hashCode;
+        let hash = 17;
+        hash = hash * 31 + this.doGetX();
+        hash = hash * 31 + this.doGetY();
+        return Math.floor(hash);
     }
-
-    abstract reset(): void;
 
     public getX(): number {
         return this.doGetX();
     }
 
-    protected abstract doGetX(): number;
-
     public setX(x: number): void {
-        this.doSetX(x);
-    }
+        this.assertClassInvariant(); 
 
-    protected abstract doSetX(x: number): void;
+        this.doSetX(x);
+        
+        const newX: number = this.doGetX();
+        MethodFailedException.assert(newX === x, "Postcondition not met: X was not set correctly.");
+        
+        this.assertClassInvariant(); 
+    }
 
     public getY(): number {
         return this.doGetY();
     }
 
-    protected abstract doGetY(): number;
-
     public setY(y: number): void {
+        this.assertClassInvariant(); 
+
         this.doSetY(y);
-    }
-
-    protected abstract doSetY(y: number): void;
-
-    public calcStraightLineDistance(other: Coordinate): number {
-        let deltaX: number = Math.abs(other.getX() - this.doGetX());
-        let deltaY: number = Math.abs(other.getY() - this.doGetY());
-        return Math.hypot(deltaX, deltaY);
+        
+        const newY: number = this.doGetY();
+        MethodFailedException.assert(newY === y, "Postcondition not met: Y was not set correctly.");
+        
+        this.assertClassInvariant(); 
     }
     
     public getR(): number {
         return this.doGetR();
     }
 
-    protected abstract doGetR(): number;
-
     public setR(r: number): void {
-        IllegalArgumentException.assert(this.isValidR(r));
-        this.doSetR(r);
-    }
+        this.assertClassInvariant(); 
 
-    protected abstract doSetR(r: number): void;
+        IllegalArgumentException.assert(this.isValidR(r), "Precondition not met: R must be non-negative.");
+        
+        this.doSetR(r);
+        
+        const newR: number = this.doGetR();
+        MethodFailedException.assert(newR === r, "Postcondition not met: R was not set correctly.");
+
+        this.assertClassInvariant(); 
+    }
 
     public getPhi(): number {
         return this.doGetPhi();
     }
 
-    protected abstract doGetPhi(): number;
-
-    /**
-     * Example code to demonstrate design by contract
-     * @param phi Angle of vector
-     */
     public setPhi(phi: number): void {
-        IllegalArgumentException.assert(this.isValidPhi(phi));
+        this.assertClassInvariant(); 
+
+        IllegalArgumentException.assert(this.isValidPhi(phi), "Precondition not met: Phi must be in [0, 2*PI).");
 
         this.doSetPhi(phi);
 
         const newPhi: number = this.doGetPhi();
-        InvalidStateException.assert(this.isValidPhi(newPhi));
-
-        MethodFailedException.assert(newPhi == phi);
+        
+        InvalidStateException.assert(this.isValidPhi(newPhi), "Class invariant not met: New Phi value is incorrect.");
+        MethodFailedException.assert(newPhi === phi, "Postcondition not met: Phi was not set correctly."); 
+        
+        this.assertClassInvariant(); 
     }
 
-    protected abstract doSetPhi(phi: number): void;
+    public calcStraightLineDistance(other: Coordinate): number {
+        IllegalArgumentException.assert(
+            other !== undefined && other !== null,
+            "Precondition not met: other coordinate must not be null."
+        );
+        
+        const dx = this.doGetX() - other.getX();
+        const dy = this.doGetY() - other.getY();
+        return Math.sqrt(dx * dx + dy * dy);
+    }
 
     public calcGreatCircleDistance(other: Coordinate): number {
-        let lowerR = Math.min(this.getR(), other.getR());
-        let deltaPhi = Math.abs(other.getPhi() - this.getPhi());
-        return lowerR * deltaPhi;
+        IllegalArgumentException.assert(
+            other !== undefined && other !== null,
+            "Precondition not met: other coordinate must not be null."
+        );
+        
+    
+        const r = Math.max(this.doGetR(), other.getR());
+        const deltaPhi = Math.abs(this.doGetPhi() - other.getPhi());
+        const angularDiff = Math.min(deltaPhi, 2 * Math.PI - deltaPhi);
+        return r * angularDiff;
     }
 
     public multiplyWith(other: Coordinate): void {
-        let newR = this.getR() * other.getR();
-        let newPhi = this.getPhi() + other.getPhi();
-        this.setR(newR);
-        this.setPhi(newPhi);
+        IllegalArgumentException.assert(
+            other !== undefined && other !== null,
+            "Precondition not met: other coordinate must not be null."
+        );
+        
+        this.assertClassInvariant();
+        
+        const newR = this.doGetR() * other.getR();
+        let newPhi = this.doGetPhi() + other.getPhi();
+        
+        while (newPhi >= 2 * Math.PI) {
+            newPhi -= 2 * Math.PI;
+        }
+        while (newPhi < 0) {
+            newPhi += 2 * Math.PI;
+        }
+        
+        this.doSetR(newR);
+        this.doSetPhi(newPhi);
+        
+        this.assertClassInvariant();
     }
-
-    protected isValidR(r: number): boolean {
-        return r >= 0;
-    }
-
-    protected isValidPhi(phi: number): boolean {
-        return (phi >= 0) && (phi < 2*Math.PI);
-    }
-
-    protected isValidDelChar(d: string): boolean {
-        return d.length == 1;
-    }
-
 }

@@ -1,5 +1,8 @@
+// Node.ts (Contracts Added)
+
 import { Name } from "../names/Name";
 import { Directory } from "./Directory";
+import { IllegalArgumentException } from "../common/IllegalArgumentException"; // Required for Precondition
 
 export class Node {
 
@@ -7,37 +10,27 @@ export class Node {
     protected parentNode: Directory;
 
     constructor(bn: string, pn: Directory) {
+        Node.assertValidBaseNameAsPrecondition(bn);
+        
         this.doSetBaseName(bn);
-        this.parentNode = pn; // why oh why do I have to set this
+        this.parentNode = pn;
         this.initialize(pn);
     }
-
+    
     protected initialize(pn: Directory): void {
         this.parentNode = pn;
         this.parentNode.addChildNode(this);
     }
-
-    public move(to: Directory): void {
-        this.parentNode.removeChildNode(this);
-        to.addChildNode(this);
-        this.parentNode = to;
+    
+ 
+    protected static assertValidBaseNameAsPrecondition(baseName: string): void {
+        const condition = baseName.length > 0;
+        IllegalArgumentException.assert(condition, "Precondition not met: Base name must be a non-empty string.");
     }
-
-    public getFullName(): Name {
-        const result: Name = this.parentNode.getFullName();
-        result.append(this.getBaseName());
-        return result;
-    }
-
-    public getBaseName(): string {
-        return this.doGetBaseName();
-    }
-
-    protected doGetBaseName(): string {
-        return this.baseName;
-    }
+    
 
     public rename(bn: string): void {
+        Node.assertValidBaseNameAsPrecondition(bn);
         this.doSetBaseName(bn);
     }
 
@@ -47,6 +40,14 @@ export class Node {
 
     public getParentNode(): Directory {
         return this.parentNode;
+    }
+
+    public getBaseName(): string {
+        return this.doGetBaseName();
+    }
+
+    protected doGetBaseName(): string {
+        return this.baseName;
     }
 
 }
