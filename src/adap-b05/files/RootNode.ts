@@ -11,7 +11,7 @@ export class RootNode extends Directory {
     }
 
     constructor() {
-        super("", new Object as Directory);
+        super("/", new Object as Directory);
     }
 
     protected initialize(pn: Directory): void {
@@ -29,5 +29,11 @@ export class RootNode extends Directory {
     protected doSetBaseName(bn: string): void {
         // null operation
     }
+    
+    protected override assertBaseNameInvariant(): void {
+}
 
+    public override getBaseName(): string {
+        return "";  
+    }
 }

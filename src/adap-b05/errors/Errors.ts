@@ -1,6 +1,4 @@
-/**
- * Unclear purpose of file, keeping it for now (not used)
- */
+
 
 enum FS_ERROR_TYPES {
     FILE_NOT_FOUND,

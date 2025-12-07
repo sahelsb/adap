@@ -1,4 +1,3 @@
-// AbstractName.ts (Homework B04: Design by Contract)
 
 import { DEFAULT_DELIMITER, ESCAPE_CHARACTER } from "../common/Printable";
 import { Name } from "./Name";

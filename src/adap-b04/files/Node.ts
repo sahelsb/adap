@@ -1,4 +1,3 @@
-// Node.ts (Contracts Added)
 
 import { Name } from "../names/Name";
 import { Directory } from "./Directory";
